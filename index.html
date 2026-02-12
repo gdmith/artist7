@@ -2,93 +2,119 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Top 6 Streams</title>
+    <title>Multi-Track Stats Dashboard</title>
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0c0c0c; color: white; padding: 40px 20px; margin: 0; }
-        h1 { text-align: center; color: #1DB954; margin-bottom: 40px; }
-
-        /* Contenedor de las 6 tarjetas */
-        .dashboard-grid {
+        body { font-family: 'Inter', sans-serif; background: #0a0a0a; color: white; padding: 40px; }
+        
+        /* Grid para las 6 canciones */
+        .grid-canciones {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 25px;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
         }
 
-        .stats-card {
-            background: #181818;
+        .card {
+            background: #161616;
             border-radius: 15px;
             padding: 20px;
-            border: 1px solid #282828;
-            transition: 0.3s;
+            border: 1px solid #333;
+            text-align: center;
         }
 
-        .stats-card:hover { border-color: #1DB954; background: #222; }
+        /* Apartado Anual vs Mensual */
+        .card-total {
+            background: linear-gradient(145deg, #1db95422, #161616);
+            border: 2px solid #1DB954;
+            border-radius: 20px;
+            padding: 40px;
+            margin-top: 30px;
+        }
 
-        .song-image { width: 100%; aspect-ratio: 1/1; border-radius: 10px; object-fit: cover; }
-        
-        h3 { margin: 15px 0 5px 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .hoy { font-size: 2em; font-weight: bold; }
+        .subio { color: #1DB954; }
+        .bajo { color: #ff4444; }
 
-        .stats-box { background: #121212; padding: 12px; border-radius: 8px; margin-top: 15px; }
-        .stat-line { display: flex; justify-content: space-between; margin: 5px 0; font-size: 0.9rem; }
-        
-        .label { color: #b3b3b3; }
-        .diff-up { color: #1DB954; font-weight: bold; }
-        .diff-down { color: #ff4d4d; font-weight: bold; }
+        /* Animación de parpadeo */
+        .pulso { animation: glow 2s infinite; }
+        @keyframes glow {
+            0%, 100% { text-shadow: 0 0 5px rgba(29, 185, 84, 0.2); }
+            50% { text-shadow: 0 0 15px rgba(29, 185, 84, 0.6); }
+        }
+
+        h1 { color: #888; font-size: 0.9em; text-transform: uppercase; letter-spacing: 3px; }
     </style>
 </head>
 <body>
 
-    <h1>Global Stream Dashboard</h1>
-    <div class="dashboard-grid" id="container">
+    <h1>Top 6 Canciones (Hoy vs Ayer)</h1>
+    <div class="grid-canciones" id="contenedor-canciones">
         </div>
 
+    <div class="card-total">
+        <h1>Balance Global (Mensual vs Anual)</h1>
+        <div id="total-stats">
+            <h2 id="balance-texto" class="hoy">Calculando...</h2>
+            <p id="balance-subtexto" style="color: #888;"></p>
+        </div>
+    </div>
+
     <script>
-        const SHEET_URL = 'TU_LINK_DE_GOOGLE_SHEETS_AQUI';
+        const LINK_CSV = 'https://drive.google.com/file/d/14pZilcIoCSiR0-PObNW0JcqA32U4oKQh/view?usp=drivesdk';
 
-        async function loadDashboard() {
+        async function cargarData() {
             try {
-                const response = await fetch(SHEET_URL);
-                const data = await response.text();
-                const filas = data.split('\n').slice(1); // Ignorar la cabecera
-                const container = document.getElementById('container');
+                const res = await fetch(LINK_CSV);
+                const csv = await res.text();
+                const filas = csv.split('\n').map(f => f.split(','));
 
-                filas.forEach(fila => {
-                    const columnas = fila.split(',');
-                    if(columnas.length < 4) return; // Saltar filas vacías
+                let htmlCanciones = '';
+                let totalMensual = 0;
+                let totalAnual = 0;
 
-                    const [titulo, portada, hoy, ayer] = columnas;
-                    const diff = parseInt(hoy) - parseInt(ayer);
-                    const claseDiff = diff >= 0 ? 'diff-up' : 'diff-down';
-                    const signo = diff >= 0 ? '▲' : '▼';
+                // Procesar las 6 canciones (Filas 1 a 6 del CSV)
+                for(let i = 1; i <= 6; i++) {
+                    const nombre = filas[i][0];
+                    const hoy = parseInt(filas[i][1]);
+                    const ayer = parseInt(filas[i][2]);
+                    const m_actual = parseInt(filas[i][3]);
+                    const a_actual = parseInt(filas[i][4]);
 
-                    // Crear el HTML de la tarjeta
-                    container.innerHTML += `
-                        <div class="stats-card">
-                            <img src="${portada}" class="song-image">
-                            <h3>${titulo}</h3>
-                            <div class="stats-box">
-                                <div class="stat-line">
-                                    <span class="label">Hoy</span>
-                                    <span>${parseInt(hoy).toLocaleString()}</span>
-                                </div>
-                                <div class="stat-line">
-                                    <span class="label">Crecimiento</span>
-                                    <span class="${claseDiff}">${signo} ${Math.abs(diff).toLocaleString()}</span>
-                                </div>
-                            </div>
+                    const diff = hoy - ayer;
+                    const clase = diff >= 0 ? 'subio' : 'bajo';
+                    const flecha = diff >= 0 ? '▲' : '▼';
+
+                    totalMensual += m_actual;
+                    totalAnual += a_actual;
+
+                    htmlCanciones += `
+                        <div class="card">
+                            <p style="color:#888">${nombre}</p>
+                            <div class="hoy ${clase} pulso">${hoy.toLocaleString()}</div>
+                            <div class="${clase}">${flecha} ${diff.toLocaleString()}</div>
                         </div>
                     `;
-                });
+                }
+
+                document.getElementById('contenedor-canciones').innerHTML = htmlCanciones;
+
+                // Lógica Mensual vs Anual
+                // Aquí calculamos cuánto representa el mes respecto al año
+                const diffAnual = totalAnual - totalMensual;
+                document.getElementById('balance-texto').innerText = `Mensual: ${totalMensual.toLocaleString()}`;
+                document.getElementById('balance-subtexto').innerHTML = `
+                    Restante para igualar el Anual: <b style="color:white">${diffAnual.toLocaleString()}</b> <br>
+                    Total Anual Acumulado: ${totalAnual.toLocaleString()}
+                `;
+
             } catch (e) {
                 console.error("Error cargando datos", e);
             }
         }
 
-        loadDashboard();
-    </script>
-</b
-    ody>
+        cargarData();
+        setInterval(cargarData, 30000);
+    </script
+        >
+</body>
 </html>
