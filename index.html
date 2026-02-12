@@ -3,113 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stats del Artista</title>
+    <title>Top 6 Streams</title>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f0f0f;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
+        body { font-family: 'Inter', sans-serif; background-color: #0c0c0c; color: white; padding: 40px 20px; margin: 0; }
+        h1 { text-align: center; color: #1DB954; margin-bottom: 40px; }
+
+        /* Contenedor de las 6 tarjetas */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .stats-card {
-            background: #1a1a1a;
-            border-radius: 20px;
-            padding: 25px;
-            width: 350px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            text-align: center;
-            border: 1px solid #333;
-        }
-
-        .song-image {
-            width: 100%;
-            aspect-ratio: 1/1;
+            background: #181818;
             border-radius: 15px;
-            object-fit: cover;
-            margin-bottom: 15px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            padding: 20px;
+            border: 1px solid #282828;
+            transition: 0.3s;
         }
 
-        h2 { margin: 10px 0 5px 0; font-size: 1.4rem; }
-        p.artist { color: #b3b3b3; margin-bottom: 20px; font-size: 0.9rem; }
+        .stats-card:hover { border-color: #1DB954; background: #222; }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 15px;
-            background: #252525;
-            padding: 15px;
-            border-radius: 12px;
-        }
+        .song-image { width: 100%; aspect-ratio: 1/1; border-radius: 10px; object-fit: cover; }
+        
+        h3 { margin: 15px 0 5px 0; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .stat-label { color: #888; font-size: 0.8rem; text-transform: uppercase; }
-        .stat-value { font-weight: bold; font-size: 1.1rem; }
-
-        .diff-positive { color: #1DB954; font-size: 0.9rem; font-weight: bold; }
-        .diff-negative { color: #eb4034; font-size: 0.9rem; font-weight: bold; }
-
-        .divider {
-            height: 1px;
-            background: #444;
-            margin: 10px 0;
-        }
+        .stats-box { background: #121212; padding: 12px; border-radius: 8px; margin-top: 15px; }
+        .stat-line { display: flex; justify-content: space-between; margin: 5px 0; font-size: 0.9rem; }
+        
+        .label { color: #b3b3b3; }
+        .diff-up { color: #1DB954; font-weight: bold; }
+        .diff-down { color: #ff4d4d; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="stats-card">
-        <img src="https://via.placeholder.com/300" alt="Portada de la canción" class="song-image" id="cover">
-        
-        <h2 id="song-title">Nombre de la Canción</h2>
-        <p class="artist">Nombre del Artista</p>
-
-        <div class="stats-grid">
-            <div class="stat-item">
-                <span class="stat-label">Hoy</span>
-                <span class="stat-value" id="streams-today">0</span>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="stat-item">
-                <span class="stat-label">Crecimiento (vs Ayer)</span>
-                <span id="streams-diff" class="diff-positive">+0</span>
-            </div>
+    <h1>Global Stream Dashboard</h1>
+    <div class="dashboard-grid" id="container">
         </div>
-    </div>
 
     <script>
-        // Datos de ejemplo (Aquí es donde conectarías una API en el futuro)
-        const datos = {
-            hoy: 15500,
-            ayer: 12000
-        };
+        const SHEET_URL = 'TU_LINK_DE_GOOGLE_SHEETS_AQUI';
 
-        const diferencia = datos.hoy - datos.ayer;
-        
-        // Inyectar datos en el HTML
-        document.getElementById('streams-today').innerText = datos.hoy.toLocaleString();
-        
-        const diffElement = document.getElementById('streams-diff');
-        const signo = diferencia > 0 ? "+" : "";
-        diffElement.innerText = `${signo}${diferencia.toLocaleString()}`;
-        
-        // Cambiar color si la resta es negativa
-        if (diferencia < 0) {
-            diffElement.className = "diff-negative";
+        async function loadDashboard() {
+            try {
+                const response = await fetch(SHEET_URL);
+                const data = await response.text();
+                const filas = data.split('\n').slice(1); // Ignorar la cabecera
+                const container = document.getElementById('container');
+
+                filas.forEach(fila => {
+                    const columnas = fila.split(',');
+                    if(columnas.length < 4) return; // Saltar filas vacías
+
+                    const [titulo, portada, hoy, ayer] = columnas;
+                    const diff = parseInt(hoy) - parseInt(ayer);
+                    const claseDiff = diff >= 0 ? 'diff-up' : 'diff-down';
+                    const signo = diff >= 0 ? '▲' : '▼';
+
+                    // Crear el HTML de la tarjeta
+                    container.innerHTML += `
+                        <div class="stats-card">
+                            <img src="${portada}" class="song-image">
+                            <h3>${titulo}</h3>
+                            <div class="stats-box">
+                                <div class="stat-line">
+                                    <span class="label">Hoy</span>
+                                    <span>${parseInt(hoy).toLocaleString()}</span>
+                                </div>
+                                <div class="stat-line">
+                                    <span class="label">Crecimiento</span>
+                                    <span class="${claseDiff}">${signo} ${Math.abs(diff).toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            } catch (e) {
+                console.error("Error cargando datos", e);
+            }
         }
+
+        loadDashboard();
     </script>
-</
-body>
+</b
+    ody>
 </html>
