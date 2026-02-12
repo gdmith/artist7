@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stats del Artista</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f0f0f;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .stats-card {
+            background: #1a1a1a;
+            border-radius: 20px;
+            padding: 25px;
+            width: 350px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            text-align: center;
+            border: 1px solid #333;
+        }
+
+        .song-image {
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 15px;
+            object-fit: cover;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        h2 { margin: 10px 0 5px 0; font-size: 1.4rem; }
+        p.artist { color: #b3b3b3; margin-bottom: 20px; font-size: 0.9rem; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            background: #252525;
+            padding: 15px;
+            border-radius: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stat-label { color: #888; font-size: 0.8rem; text-transform: uppercase; }
+        .stat-value { font-weight: bold; font-size: 1.1rem; }
+
+        .diff-positive { color: #1DB954; font-size: 0.9rem; font-weight: bold; }
+        .diff-negative { color: #eb4034; font-size: 0.9rem; font-weight: bold; }
+
+        .divider {
+            height: 1px;
+            background: #444;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stats-card">
+        <img src="https://via.placeholder.com/300" alt="Portada de la canción" class="song-image" id="cover">
+        
+        <h2 id="song-title">Nombre de la Canción</h2>
+        <p class="artist">Nombre del Artista</p>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-label">Hoy</span>
+                <span class="stat-value" id="streams-today">0</span>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="stat-item">
+                <span class="stat-label">Crecimiento (vs Ayer)</span>
+                <span id="streams-diff" class="diff-positive">+0</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos de ejemplo (Aquí es donde conectarías una API en el futuro)
+        const datos = {
+            hoy: 15500,
+            ayer: 12000
+        };
+
+        const diferencia = datos.hoy - datos.ayer;
+        
+        // Inyectar datos en el HTML
+        document.getElementById('streams-today').innerText = datos.hoy.toLocaleString();
+        
+        const diffElement = document.getElementById('streams-diff');
+        const signo = diferencia > 0 ? "+" : "";
+        diffElement.innerText = `${signo}${diferencia.toLocaleString()}`;
+        
+        // Cambiar color si la resta es negativa
+        if (diferencia < 0) {
+            diffElement.className = "diff-negative";
+        }
+    </script>
+</
+body>
+</html>
